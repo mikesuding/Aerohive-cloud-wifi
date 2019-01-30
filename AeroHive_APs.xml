@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<feed  version="1.0" hasPendingRequests="false" >
+  <company></company>
+  <status>200</status>
+  <errmsg>OK</errmsg>
+  <interval>0</interval>
+    <entry type="predatasource">
+        <version>1548855593</version>
+        <name>AeroHive_APs</name>
+        <displayedas>AeroHive_APs</displayedas>
+        <description>by Mike Suding. Gets all your Access Points including, name, model, IP, status, and number of connected clients</description>
+        <collector>batchscript</collector>
+        <hasMultiInstances>true</hasMultiInstances>
+        <schedule>60</schedule>
+        <appliesTo>aerohive_token.key &#38;&#38; aerohive_owner_id &#38;&#38; aerohive_client_id &#38;&#38; aerohive_client_secret &#38;&#38; aerohive_client_redirect_URI</appliesTo>
+        <wildcardauto>true</wildcardauto>
+        <wildcardpersist>false</wildcardpersist>
+        <wildcardlinuxscript>ad_script</wildcardlinuxscript>
+        <wildcardlinuxcmdline>type=&#34;embeded&#34; </wildcardlinuxcmdline>
+        <wildcardwinscript>ad_script</wildcardwinscript>
+        <wildcardwincmdline>type=&#34;embeded&#34; </wildcardwincmdline>
+        <wildcardgroovyscript>def aerohive_token = hostProps.get(&#34;aerohive_token.key&#34;); // from cloud.aerohive.com account (name &#62; global settings &#62; API tokens)
+def owner_id       = hostProps.get(&#34;aerohive_owner_id&#34;);  // from cloud.aerohive.com account (name &#62; about &#62; aka &#39;VHM id&#39;)
+def client_id           = hostProps.get(&#34;aerohive_client_id&#34;);     // from your developer.aerohive.com under your &#39;app&#39;
+def client_secret       = hostProps.get(&#34;aerohive_client_secret&#34;); // from your developer.aerohive.com under your app
+def client_redirect_uri = hostProps.get(&#34;aerohive_client_redirect_URI&#34;); // from your developer.aerohive.com under your app
+
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import groovy.json.JsonSlurper;
+
+def url = &#34;https://cloud-va2.aerohive.com/xapi/v1/monitor/devices?ownerId=&#34; + owner_id + &#34;&#38;pageSize=33444&#34; 
+def httpclient = HttpClients.createDefault();
+def httpGet = new HttpGet(url);
+httpGet.addHeader(&#34;Authorization&#34;, &#34;Bearer &#34; + aerohive_token);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-ID&#34;,           client_id);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-SECRET&#34;,       client_secret);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-REDIRECT-URI&#34;, client_redirect_uri);
+def response = httpclient.execute(httpGet);
+def response_body = EntityUtils.toString(response.getEntity());
+def items = new JsonSlurper().parseText(response_body).data;
+//println items
+for (data in items)
+{
+	def location = data.locations
+	def string_location = location ? location.last() : &#34;Unknown&#34;;
+    println data.deviceId + &#34;##&#34; + data.hostName +&#34;  &#34; + data.ip + &#34;##model=&#34; + data.model + &#34; version=&#34; + data.osVersion + &#34;####aerohive_location=&#34; + string_location
+}
+return 0;</wildcardgroovyscript>
+        <wildcardschedule>15</wildcardschedule>
+        <wildcarddisable>false</wildcarddisable>
+        <wildcarddeleteinactive>true</wildcarddeleteinactive>
+        <agdmethod>ilp</agdmethod>
+        <agdparams>aerohive_location</agdparams>
+        <group></group>
+        <tags></tags>
+        <technology>see blog.mikesuding.com. 
+The token.key and owner_id comes from your Aerohive cloud manager web portal. Your client_id, secret, and redirect URI comes from your developer.aerohive.com account.</technology>
+        <adlist><![CDATA[{"agdmethod":"ilp","method":"ad_script","agdparams":"aerohive_location","id":0,"filters":[],"params":{"type":"embeded","groovyscript":"def aerohive_token = hostProps.get(\"aerohive_token.key\"); // from cloud.aerohive.com account (name > global settings > API tokens)\r\ndef owner_id       = hostProps.get(\"aerohive_owner_id\");  // from cloud.aerohive.com account (name > about > aka 'VHM id')\r\ndef client_id           = hostProps.get(\"aerohive_client_id\");     // from your developer.aerohive.com under your 'app'\r\ndef client_secret       = hostProps.get(\"aerohive_client_secret\"); // from your developer.aerohive.com under your app\r\ndef client_redirect_uri = hostProps.get(\"aerohive_client_redirect_URI\"); // from your developer.aerohive.com under your app\r\n\r\nimport org.apache.http.client.methods.HttpGet;\r\nimport org.apache.http.impl.client.CloseableHttpClient;\r\nimport org.apache.http.impl.client.HttpClients;\r\nimport org.apache.http.util.EntityUtils;\r\nimport groovy.json.JsonSlurper;\r\n\r\ndef url = \"https://cloud-va2.aerohive.com/xapi/v1/monitor/devices?ownerId=\" + owner_id + \"&pageSize=33444\" \r\ndef httpclient = HttpClients.createDefault();\r\ndef httpGet = new HttpGet(url);\r\nhttpGet.addHeader(\"Authorization\", \"Bearer \" + aerohive_token);\r\nhttpGet.addHeader(\"X-AH-API-CLIENT-ID\",           client_id);\r\nhttpGet.addHeader(\"X-AH-API-CLIENT-SECRET\",       client_secret);\r\nhttpGet.addHeader(\"X-AH-API-CLIENT-REDIRECT-URI\", client_redirect_uri);\r\ndef response = httpclient.execute(httpGet);\r\ndef response_body = EntityUtils.toString(response.getEntity());\r\ndef items = new JsonSlurper().parseText(response_body).data;\r\n//println items\r\nfor (data in items)\r\n{\r\n\tdef location = data.locations\r\n\tdef string_location = location ? location.last() : \"Unknown\";\r\n    println data.deviceId + \"##\" + data.hostName +\"  \" + data.ip + \"##model=\" + data.model + \" version=\" + data.osVersion + \"####aerohive_location=\" + string_location\r\n}\r\nreturn 0;"}}]]></adlist>
+        <schemaVersion>2</schemaVersion>
+        <dataSourceType>1</dataSourceType>
+        <attributes>
+        <attribute>
+            <name>scripttype</name>
+            <value>embed</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>scriptgroovy</name>
+            <value>def aerohive_token = hostProps.get(&#34;aerohive_token.key&#34;); // from cloud.aerohive.com account (name &#62; global settings &#62; API tokens)
+def owner_id       = hostProps.get(&#34;aerohive_owner_id&#34;);  // from cloud.aerohive.com account (name &#62; about &#62; aka &#39;VHM id&#39;)
+def client_id           = hostProps.get(&#34;aerohive_client_id&#34;);     // from your developer.aerohive.com under your &#39;app&#39;
+def client_secret       = hostProps.get(&#34;aerohive_client_secret&#34;); // from your developer.aerohive.com under your app
+def client_redirect_uri = hostProps.get(&#34;aerohive_client_redirect_URI&#34;); // from your developer.aerohive.com under your app
+
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import groovy.json.JsonSlurper;
+
+def url = &#34;https://cloud-va2.aerohive.com/xapi/v1/monitor/devices?ownerId=&#34; + owner_id + &#34;&#38;pageSize=33444&#34; 
+def httpclient = HttpClients.createDefault();
+def httpGet = new HttpGet(url);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-ID&#34;,           client_id);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-SECRET&#34;,       client_secret);
+httpGet.addHeader(&#34;X-AH-API-CLIENT-REDIRECT-URI&#34;, client_redirect_uri);
+httpGet.addHeader(&#34;Authorization&#34;, &#34;Bearer &#34; + aerohive_token);
+def response = httpclient.execute(httpGet);
+def response_body = EntityUtils.toString(response.getEntity());
+def items = new JsonSlurper().parseText(response_body).data;
+//println items
+
+for (data in items)
+{
+	def connected = data.connected
+	if (connected == true) {connected=1	} else {connected=0	}
+	def connectedClients = data.connectedClients
+	if (connectedClients == null) {connected_clients=0} else {connected_clients=connectedClients}
+	println data.deviceId + &#34;.connected=&#34;                + connected
+    println data.deviceId + &#34;.activeClients=&#34;            + data.activeClients
+    println data.deviceId + &#34;.connectedClients=&#34;         + connected_clients
+    println data.deviceId + &#34;.unAssociatedClientsCount=&#34; + data.unAssociatedClientsCount
+    println data.deviceId + &#34;.deviceId=&#34;                 + data.deviceId
+} // end of FOR loop
+
+return 0;</value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowsscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxscript</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>windowscmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        <attribute>
+            <name>linuxcmdline</name>
+            <value></value>
+            <comment></comment>
+        </attribute>
+        </attributes>
+        <datapoints>
+        <datapoint>
+            <name>ms_it_took</name>
+            <dataType>4</dataType>
+            <type>2</type>
+            <postprocessormethod>none</postprocessormethod>
+            <postprocessorparam></postprocessorparam>
+            <usevalue>responseTime</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>connected</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>##wildvalue##.connected</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr>!= 1</alertexpr>
+            <alertmissing>3</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description>1=ok 0=bad</description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>1</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>active_clients</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>##wildvalue##.activeClients</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>connected_clients</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>##wildvalue##.connectedClients</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>unAssociated_clients</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>##wildvalue##.unAssociatedClientsCount</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        <datapoint>
+            <name>deviceId</name>
+            <dataType>7</dataType>
+            <type>2</type>
+            <postprocessormethod>namevalue</postprocessormethod>
+            <postprocessorparam>##wildvalue##.deviceId</postprocessorparam>
+            <usevalue>output</usevalue>
+            <alertexpr></alertexpr>
+            <alertmissing>1</alertmissing>
+            <alertsubject></alertsubject>
+            <alertbody></alertbody>
+            <description></description>
+            <maxvalue></maxvalue>
+            <minvalue></minvalue>
+            <userparam1></userparam1>
+            <userparam2></userparam2>
+            <userparam3></userparam3>
+            <iscomposite>false</iscomposite>
+            <rpn></rpn>
+            <alertTransitionIval>0</alertTransitionIval>
+            <alertClearTransitionIval>0</alertClearTransitionIval>
+        </datapoint>
+        </datapoints>
+        <graphs>
+        <graph>
+            <name>Active clients</name>
+            <title>Active clients</title>
+            <verticallabel>qty</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>2</displayprio>
+            <timescale>8hour</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>active_clients</name>
+            <datapointname>active_clients</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>2</type>
+                <legend>active_clients</legend>
+                <color>navy</color>
+                <datapointname>active_clients</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>Connected APs</name>
+            <title>Connected APs</title>
+            <verticallabel>1=ok, 0=bad</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>2.0</maxvalue>
+            <minvalue>-1.0</minvalue>
+            <displayprio>1</displayprio>
+            <timescale>8hour</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>connected</name>
+            <datapointname>connected</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>2</type>
+                <legend>connected</legend>
+                <color>olive</color>
+                <datapointname>connected</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>Connected clients</name>
+            <title>Connected clients</title>
+            <verticallabel>qty</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>-1.0</minvalue>
+            <displayprio>3</displayprio>
+            <timescale>8hour</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>connected_clients</name>
+            <datapointname>connected_clients</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>2</type>
+                <legend>connected_clients</legend>
+                <color>orange2</color>
+                <datapointname>connected_clients</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>ms it took</name>
+            <title>ms it took</title>
+            <verticallabel>milliseconds</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>0.0</minvalue>
+            <displayprio>5</displayprio>
+            <timescale>1hour</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>ms_it_took</name>
+            <datapointname>ms_it_took</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>2</type>
+                <legend>ms_it_took</legend>
+                <color>gray</color>
+                <datapointname>ms_it_took</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        <graph>
+            <name>unAssociated clients</name>
+            <title>unAssociated clients</title>
+            <verticallabel>qty</verticallabel>
+            <rigid>false</rigid>
+            <maxvalue>NaN</maxvalue>
+            <minvalue>-1.0</minvalue>
+            <displayprio>4</displayprio>
+            <timescale>8hour</timescale>
+            <base1024>false</base1024>
+            <graphdatapoints>
+        <graphdatapoint>
+            <name>unAssociated_clients</name>
+            <datapointname>unAssociated_clients</datapointname>
+            <cf>1</cf>
+        </graphdatapoint>
+            </graphdatapoints>
+            <graphvirtualdatapoints>
+            </graphvirtualdatapoints>
+            <graphdatas>
+            <graphdata>
+                <type>2</type>
+                <legend>unAssociated_clients</legend>
+                <color>red2</color>
+                <datapointname>unAssociated_clients</datapointname>
+                <isvirtualdatapoint>false</isvirtualdatapoint>
+            </graphdata>
+            </graphdatas>
+        </graph>
+        </graphs>
+        <overviewgraphs>
+        </overviewgraphs>
+        <scripts>
+        </scripts>
+    </entry>
+</feed>
